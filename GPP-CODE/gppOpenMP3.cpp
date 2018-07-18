@@ -11,6 +11,7 @@ Sequential GPP code that uses std:complex<double> data type.
 #include <sys/time.h>
 
 using namespace std;
+#define DEBUG_OMP
 
 #define nstart 0
 #define nend 3
@@ -137,7 +138,18 @@ void noflagOCC_solver(double wxt, std::complex<double> *wtilde_array, int my_igp
     double scht_loc_r = 0.0;
     double scht_loc_i = 0.0;
 
-    #pragma omp parallel for reduction (+:scht_loc_r,scht_loc_i)
+#ifdef DEBUG_OMP
+#pragma omp parallel private(tid)
+    {
+      int tid = omp_get_thread_num();
+      if (tid == 0)
+        std::cout << "Number of OpenMP threads = " << omp_get_num_threads() << std::endl;
+      std::cout << "Hello from thread " << tid << std::endl;
+    }
+#endif // DEBUG_OMP
+
+    // ssxt, igp scha are unused
+#pragma omp parallel for reduction (+:scht_loc_r,scht_loc_i) schedule(static) default(none) shared(wxt, wtilde_array, my_igp, n1, aqsmtemp, aqsntemp, I_eps_array, ncouls, mygpvar1)
     for(int ig = 0; ig<ncouls; ++ig)
     {
         std::complex<double> wdiff = wxt - wtilde_array[my_igp*ncouls+ig];
@@ -173,7 +185,9 @@ int main(int argc, char** argv)
     const int nodes_per_group = atoi(argv[4]);
 
     // Parallel diagnostics
-    std::cout << "Number of OpenMP threads = " << omp_get_num_threads() << std::endl;
+#ifdef DEBUG_OMP
+    std::cout << "Number of OpenMP threads = " << omp_get_max_threads() << std::endl;
+#endif // DEBUG_OMP
 
 //Constants that will be used later
     const int npes = 1;
