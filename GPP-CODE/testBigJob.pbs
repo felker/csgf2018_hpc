@@ -43,6 +43,8 @@ if [ "${VER}" = "ComplexClass" ]; then
     num_threads=16
 fi
 
+cd $MEMBERWORK/csc261/csgf2018_hpc
+
 export OMP_NUM_THREADS=${num_threads}
 aprun_command="aprun -n ${num_mpi_ranks} -d ${num_threads}"
 echo "The commands we run are:"
