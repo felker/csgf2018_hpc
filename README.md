@@ -13,3 +13,10 @@ HPC Workshop/Hackathon during 2018 CSGF Annual Program Review.
 - Hannah Klion
 - Helena Qi
 - Adam Sealfon
+
+
+*Note*: please set the default `git pull` behavior to rebase instead of merge, e.g.:
+
+```
+git config --global pull.rebase true
+```

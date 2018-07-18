@@ -7,6 +7,8 @@
 *.o
 *.obj
 
+*.ex
+
 # PBS output
 *.o*
 
