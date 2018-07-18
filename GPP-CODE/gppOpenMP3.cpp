@@ -11,7 +11,7 @@ Sequential GPP code that uses std:complex<double> data type.
 #include <sys/time.h>
 
 using namespace std;
-#define DEBUG_OMP
+//#define DEBUG_OMP
 
 #define nstart 0
 #define nend 3
@@ -185,9 +185,9 @@ int main(int argc, char** argv)
     const int nodes_per_group = atoi(argv[4]);
 
     // Parallel diagnostics
-#ifdef DEBUG_OMP
+    //#ifdef DEBUG_OMP
     std::cout << "Number of OpenMP threads = " << omp_get_max_threads() << std::endl;
-#endif // DEBUG_OMP
+    //#endif // DEBUG_OMP
 
 //Constants that will be used later
     const int npes = 1;
