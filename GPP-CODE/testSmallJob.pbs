@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/bash -l
 #Begin PBS directives for the job
-#PBS -A CSC190PORT
+#PBS -A CSC261
 #PBS -N GppSmallJob
 #PBS -j oe
 #PBS -l walltime=0:30:00,nodes=1
