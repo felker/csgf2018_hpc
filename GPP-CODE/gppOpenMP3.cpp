@@ -1,5 +1,5 @@
 /*
-Sequential GPP code that uses std:complex<double> data type. 
+Sequential GPP code that uses std:complex<double> data type.
 */
 #include <iostream>
 #include <cstdlib>
@@ -7,6 +7,7 @@ Sequential GPP code that uses std:complex<double> data type.
 #include <iomanip>
 #include <cmath>
 #include <complex>
+#include <omp.h>
 #include <sys/time.h>
 
 using namespace std;
@@ -118,7 +119,7 @@ void flagOCC_solver(double wxt, std::complex<double> *wtilde_array, int my_igp, 
         std::complex<double> matngmatmgp = aqsntemp[n1*ncouls+ig] * mygpvar1;
         if(ig != igp) matngpmatmg = std::conj(aqsmtemp[n1*ncouls+ig]) * mygpvar2;
 
-        ssxt_scht_solver(wxt, igp, my_igp, ig, wtilde, wtilde2, Omega2, matngmatmgp, matngpmatmg, mygpvar1, mygpvar2, ssxa[ig], scha[ig], I_eps_array[my_igp*ncouls+ig]); 
+        ssxt_scht_solver(wxt, igp, my_igp, ig, wtilde, wtilde2, Omega2, matngmatmgp, matngpmatmg, mygpvar1, mygpvar2, ssxa[ig], scha[ig], I_eps_array[my_igp*ncouls+ig]);
         ssxt += ssxa[ig];
         scht += scha[ig];
     }
@@ -135,7 +136,7 @@ void noflagOCC_solver(double wxt, std::complex<double> *wtilde_array, int my_igp
     std::complex<double> mygpvar1 = std::conj(aqsmtemp[n1*ncouls+igp]);
     double scht_loc_r = 0.0;
     double scht_loc_i = 0.0;
-    
+
     #pragma omp parallel for reduction (+:scht_loc_r,scht_loc_i)
     for(int ig = 0; ig<ncouls; ++ig)
     {
@@ -145,7 +146,7 @@ void noflagOCC_solver(double wxt, std::complex<double> *wtilde_array, int my_igp
 
         std::complex<double> delw = wtilde_array[my_igp*ncouls+ig] * conj(wdiff) *rden; //*rden
         double delwr = real(delw * conj(delw));
-        
+
         std::complex<double> tmp = mygpvar1 * aqsntemp[n1*ncouls+ig] * delw * I_eps_array[my_igp*ncouls+ig] ;
         scht_loc_r += real(tmp);
         scht_loc_i += imag(tmp);
@@ -171,9 +172,12 @@ int main(int argc, char** argv)
     const int ncouls = atoi(argv[3]);
     const int nodes_per_group = atoi(argv[4]);
 
+    // Parallel diagnostics
+    std::cout << "Number of OpenMP threads = " << omp_get_num_threads() << std::endl;
+
 //Constants that will be used later
-    const int npes = 1; 
-    const int ngpown = ncouls / (nodes_per_group * npes); 
+    const int npes = 1;
+    const int ngpown = ncouls / (nodes_per_group * npes);
     const double e_lk = 10;
     const double dw = 1;
     const double to1 = 1e-6;
@@ -181,7 +185,7 @@ int main(int argc, char** argv)
     const double sexcut = 4.0;
     const double limitone = 1.0/(to1*4.0);
     const double limittwo = pow(0.5,2);
-    const double e_n1kq= 6.0; 
+    const double e_n1kq= 6.0;
     const double occ=1.0;
 
     //Printing out the params passed.
@@ -210,7 +214,7 @@ int main(int argc, char** argv)
     double wx_array[nend-nstart];
 
     //arrays that will be later used to store the output results
-    std::complex<double> achtemp[nend-nstart]; 
+    std::complex<double> achtemp[nend-nstart];
     std::complex<double> asxtemp[nend-nstart];
 
     std::complex<double> achstemp = std::complex<double>(0.0, 0.0);
@@ -273,7 +277,7 @@ int main(int argc, char** argv)
     gettimeofday(&startTimer, NULL);
 
 //The main work starts here
-    for(int n1 = 0; n1<number_bands; ++n1) 
+    for(int n1 = 0; n1<number_bands; ++n1)
     {
         bool flag_occ = n1 < nvband;
         reduce_achstemp(n1, inv_igp_index, ncouls, aqsmtemp, aqsntemp, I_eps_array, achstemp, ngpown, vcoul);
@@ -300,7 +304,7 @@ int main(int argc, char** argv)
                     flagOCC_solver(wxt, wtilde_array, my_igp, n1, aqsmtemp, aqsntemp, I_eps_array, ssxt, scht, ncouls, igp, ssxa, scha);
                     ssx_array[iw] += ssxt;
                     sch_array[iw] +=(double) 0.5*scht;
-                    
+
                     asxtemp[iw] += ssx_array[iw] * occ * vcoul[igp];//Store output of the first nvband iterations.
                 }
             }
@@ -344,4 +348,3 @@ int main(int argc, char** argv)
 
     return 0;
 }
-
