@@ -36,7 +36,7 @@ endif
 
 CXX = CC
 LINK = ${CXX}
-CXXFLAGS=-fopenmp -O3 -g #-hlist=a
+CXXFLAGS=-fopenmp -ffast-math -march=native -O3 -g #-hlist=a
 LINKFLAGS=${CXXFLAGS}
 
 ifeq ($(VER), OpenACC)
