@@ -18,7 +18,7 @@ endif
 
 #MPI version
 ifeq ($(VER), MPIOpenMP)
-    EXE = gppMPIOpenMP.ex
+    EXE = gppMPIOpenMP3.ex
     SRC = gppMPIOpenMP3.cpp
 endif
 
