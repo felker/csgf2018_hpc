@@ -1,5 +1,5 @@
-VER=SEQ
-#VER=OpenMP
+#VER=SEQ
+VER=OpenMP
 #VER=MPIOpenMP
 #VER=OpenACC
 #VER=ComplexClass
@@ -34,9 +34,10 @@ ifeq ($(VER), ComplexClass)
     SRC = gppComplex.cpp
 endif
 
-CXX = scorep-CC
+CXX = CC
 LINK = ${CXX}
-CXXFLAGS=-O3 -g #-hlist=a
+CXXFLAGS=-fopenmp -O3 -g #-hlist=a
+LINKFLAGS=${CXXFLAGS}
 
 ifeq ($(VER), OpenACC)
     CXXFLAGS+=-h pragma=acc
