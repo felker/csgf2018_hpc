@@ -102,8 +102,11 @@ void reduce_achstemp(int n1, int* inv_igp_index, int ncouls, std::complex<double
         achstemp += schstemp * vcoul[igp] *(double) 0.5;
     }
     // MPI Reduce
-    if (myrank == 0)
+    //std::cout <<  "Myrank = " << myrank << " has achstemp = " << achstemp << std::endl;
+    if (myrank == 0) {
       MPI_Reduce(MPI_IN_PLACE, &achstemp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD);
+      //std::cout <<  "MASTER myrank = " << myrank << " has achstemp = " << achstemp << std::endl;
+    }
     else
       MPI_Reduce(&achstemp, &achstemp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD);
 }
@@ -273,16 +276,17 @@ int main(int argc, char** argv)
 
    // HERE IS EVERYTHING THAT WE ARE CHANING FOR THE MPI DISTRIBUTED ARRAYS. THERE ARE SO
    // MANY INPUT ARRAYS AND CONSTANTS, BUT NGPOWN IS THE ONLY DISTRIUBTED/BROKEN UP THING
+   std::cout << "myrank, nranks, nodes_per_group, ngpown" << myrank << " , " << nranks << " , " << nodes_per_group << " , " << ngpown << std::endl;
    for(int i=0; i<ngpown; i++)
    {
-     int iloc = myrank*nranks + i;
+     int iloc = myrank*ngpown + i;
        for(int j=0; j<ncouls; j++)
        {
            I_eps_array[i*ncouls+j] = ((double)(iloc+j))*expr;
            wtilde_array[i*ncouls+j] = ((double)(iloc+j))*expr;
        }
 
-        inv_igp_index[i] = (iloc+1) * ncouls / ngpown;
+       inv_igp_index[i] = (iloc+1) * ncouls / (ngpown*nranks);
    }
 
    for(int i=0; i<ncouls; i++)
@@ -351,7 +355,16 @@ int main(int argc, char** argv)
             }
 
             for(int iw=nstart; iw<nend; ++iw)
-                achtemp[iw] += sch_array[iw] * vcoul[igp];//Store final output here
+              achtemp[iw] += sch_array[iw] * vcoul[igp];//Store final output here
+
+            // MPI Reduce
+            //std::cout <<  "Myrank = " << myrank << " has achtemp = " << achtemp << std::endl;
+            if (myrank == 0) {
+              MPI_Reduce(MPI_IN_PLACE, &achtemp, nend-nstart, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD);
+              //std::cout << " master Myrank = " << myrank << " now has achtemp = " << achtemp << std::endl;
+            }
+            else
+              MPI_Reduce(&achtemp, &achtemp, nend-nstart, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD);
 
             acht_n1_loc[n1] += sch_array[2] * vcoul[igp];
         }
