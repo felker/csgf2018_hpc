@@ -68,7 +68,7 @@ void ssxt_scht_solver(double wxt, int igp, int my_igp, int ig, std::complex<doub
 }
 
 //This function writes its results to achstemp, rest of the parameters are its inputs.
-void reduce_achstemp(int n1, int* inv_igp_index, int ncouls, std::complex<double> *aqsmtemp, std::complex<double> *aqsntemp, std::complex<double> *I_eps_array, std::complex<double>& achstemp, int ngpown, double* vcoul)
+void reduce_achstemp(int n1, int* inv_igp_index, int ncouls, std::complex<double> *aqsmtemp, std::complex<double> *aqsntemp, std::complex<double> *I_eps_array, std::complex<double>& achstemp, int ngpown, double* vcoul, int myrank)
 {
     double to1 = 1e-6;
     for(int my_igp = 0; my_igp< ngpown; my_igp++)
@@ -101,6 +101,11 @@ void reduce_achstemp(int n1, int* inv_igp_index, int ncouls, std::complex<double
         }
         achstemp += schstemp * vcoul[igp] *(double) 0.5;
     }
+    // MPI Reduce
+    if (myrank == 0)
+      MPI_Reduce(MPI_IN_PLACE, &achstemp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD);
+    else
+      MPI_Reduce(&achstemp, &achstemp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD);
 }
 
 
@@ -197,7 +202,7 @@ int main(int argc, char** argv)
     //#endif // DEBUG_OMP
 
 //Constants that will be used later
-    const int npes = 1;
+    const int npes = nranks;
     const int ngpown = ncouls / (nodes_per_group * npes);
     const double e_lk = 10;
     const double dw = 1;
@@ -266,16 +271,18 @@ int main(int argc, char** argv)
            aqsmtemp[i*ncouls+j] = ((double)(i+j))*expr;
        }
 
-
+   // HERE IS EVERYTHING THAT WE ARE CHANING FOR THE MPI DISTRIBUTED ARRAYS. THERE ARE SO
+   // MANY INPUT ARRAYS AND CONSTANTS, BUT NGPOWN IS THE ONLY DISTRIUBTED/BROKEN UP THING
    for(int i=0; i<ngpown; i++)
    {
+     int iloc = myrank*nranks + i;
        for(int j=0; j<ncouls; j++)
        {
-           I_eps_array[i*ncouls+j] = ((double)(i+j))*expr;
-           wtilde_array[i*ncouls+j] = ((double)(i+j))*expr;
+           I_eps_array[i*ncouls+j] = ((double)(iloc+j))*expr;
+           wtilde_array[i*ncouls+j] = ((double)(iloc+j))*expr;
        }
 
-        inv_igp_index[i] = (i+1) * ncouls / ngpown;
+        inv_igp_index[i] = (iloc+1) * ncouls / ngpown;
    }
 
    for(int i=0; i<ncouls; i++)
@@ -303,7 +310,7 @@ int main(int argc, char** argv)
     for(int n1 = 0; n1<number_bands; ++n1)
     {
         bool flag_occ = n1 < nvband;
-        reduce_achstemp(n1, inv_igp_index, ncouls, aqsmtemp, aqsntemp, I_eps_array, achstemp, ngpown, vcoul);
+        reduce_achstemp(n1, inv_igp_index, ncouls, aqsmtemp, aqsntemp, I_eps_array, achstemp, ngpown, vcoul, myrank);
 
         for(int my_igp=0; my_igp<ngpown; ++my_igp)
         {

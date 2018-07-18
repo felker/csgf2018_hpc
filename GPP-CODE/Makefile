@@ -1,6 +1,6 @@
 #VER=SEQ
-VER=OpenMP
-#VER=MPIOpenMP
+#VER=OpenMP
+VER=MPIOpenMP
 #VER=OpenACC
 #VER=ComplexClass
 
