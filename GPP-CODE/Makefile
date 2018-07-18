@@ -36,7 +36,7 @@ endif
 
 CXX = CC
 LINK = ${CXX}
-CXXFLAGS=-O3 -hlist=a
+CXXFLAGS=-O3 #-hlist=a
 
 ifeq ($(VER), OpenACC)
     CXXFLAGS+=-h pragma=acc
