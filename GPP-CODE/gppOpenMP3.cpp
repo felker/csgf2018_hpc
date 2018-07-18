@@ -139,7 +139,7 @@ void noflagOCC_solver(double wxt, std::complex<double> *wtilde_array, int my_igp
     double scht_loc_i = 0.0;
 
 #ifdef DEBUG_OMP
-#pragma omp parallel private(tid)
+#pragma omp parallel
     {
       int tid = omp_get_thread_num();
       if (tid == 0)
