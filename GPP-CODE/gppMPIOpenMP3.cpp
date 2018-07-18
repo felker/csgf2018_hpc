@@ -8,6 +8,7 @@ Sequential GPP code that uses std:complex<double> data type.
 #include <cmath>
 #include <complex>
 #include <omp.h>
+#include <mpi.h>
 #include <sys/time.h>
 
 using namespace std;
@@ -169,14 +170,20 @@ void noflagOCC_solver(double wxt, std::complex<double> *wtilde_array, int my_igp
 
 int main(int argc, char** argv)
 {
+  int myrank, nranks;
+  MPI_Init(&argc, &argv);
+  MPI_Comm_size(MPI_COMM_WORLD, &nranks);
+  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 
-//The input to the executable needs 4 arguments.
+  // The input to the executable needs 4 arguments.
+  if (myrank == 0){
     if (argc != 5)
     {
-        std::cout << "The correct form of input is : " << endl;
-        std::cout << " ./a.out <number_bands> <number_valence_bands> <number_plane_waves> <matrix_divider> " << endl;
-        exit (0);
+      std::cout << "The correct form of input is : " << endl;
+      std::cout << " ./a.out <number_bands> <number_valence_bands> <number_plane_waves> <matrix_divider> " << endl;
+      exit (0);
     }
+  }
 
 //Input parameters stored in these variables.
     const int number_bands = atoi(argv[1]);
@@ -203,6 +210,7 @@ int main(int argc, char** argv)
     const double occ=1.0;
 
     //Printing out the params passed.
+    if (myrank == 0){
     std::cout << "**************************** Sequential GPP code ************************* " << std::endl;
     std::cout << "number_bands = " << number_bands \
         << "\t nvband = " << nvband \
@@ -215,6 +223,7 @@ int main(int argc, char** argv)
         << "\t sexcut = " << sexcut \
         << "\t limitone = " << limitone \
         << "\t limittwo = " << limittwo << endl;
+    }
 
     // Memory allocation of input data structures.
     // Two dimensional arrays from theory have been initialized as a single dimension in m*n format for performance.
@@ -345,11 +354,12 @@ int main(int argc, char** argv)
     double elapsedTimer = (endTimer.tv_sec - startTimer.tv_sec) +1e-6*(endTimer.tv_usec - startTimer.tv_usec);
 
 
-
-    for(int iw=nstart; iw<nend; ++iw)
+    if (myrank == 0){
+      for(int iw=nstart; iw<nend; ++iw)
         cout << "achtemp[" << iw << "] = " << std::setprecision(15) << achtemp[iw] << endl;
 
-    cout << "********** Time Taken **********= " << elapsedTimer << " secs" << endl;
+      cout << "********** Time Taken **********= " << elapsedTimer << " secs" << endl;
+    }
 
     //Free the allocated memory
     free(acht_n1_loc);
@@ -359,6 +369,7 @@ int main(int argc, char** argv)
     free(I_eps_array);
     free(inv_igp_index);
     free(vcoul);
+    MPI_Finalize();
 
     return 0;
 }
