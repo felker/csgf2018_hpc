@@ -43,10 +43,6 @@ if [ "${VER}" = "ComplexClass" ]; then
     num_threads=16
 fi
 
-rm $MEMBERWORK/csc261/${EXEC}.ex
-cp /ccs/home/rgayatri/DOE-CSGF/${EXEC}.ex $MEMBERWORK/csc261
-cd $MEMBERWORK/csc261
-date
 
 export OMP_NUM_THREADS=${num_threads}
 aprun_command="aprun -n ${num_mpi_ranks} -d ${num_threads}"
