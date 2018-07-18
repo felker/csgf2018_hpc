@@ -29,7 +29,7 @@ if [ "${VER}" = "OpenMP" ]; then
 fi
 
 if [ "${VER}" = "MPI" ]; then
-    EXEC=gppMPI
+    EXEC=gppMPIOpenMP3
     num_mpi_ranks=8
     num_threads=$(((${num_nodes}*16)/${num_mpi_ranks}))
 fi
