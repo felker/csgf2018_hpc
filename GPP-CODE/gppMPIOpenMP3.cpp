@@ -357,18 +357,18 @@ int main(int argc, char** argv)
             for(int iw=nstart; iw<nend; ++iw)
               achtemp[iw] += sch_array[iw] * vcoul[igp];//Store final output here
 
-            // MPI Reduce
-            //std::cout <<  "Myrank = " << myrank << " has achtemp = " << achtemp << std::endl;
-            if (myrank == 0) {
-              MPI_Reduce(MPI_IN_PLACE, &achtemp, nend-nstart, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD);
-              //std::cout << " master Myrank = " << myrank << " now has achtemp = " << achtemp << std::endl;
-            }
-            else
-              MPI_Reduce(&achtemp, &achtemp, nend-nstart, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD);
 
             acht_n1_loc[n1] += sch_array[2] * vcoul[igp];
         }
     }
+    // MPI Reduce
+    if (myrank == 0) {
+      MPI_Reduce(MPI_IN_PLACE, &achtemp, nend-nstart, MPI_CXX_DOUBLE_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD);
+      //std::cout << " master Myrank = " << myrank << " now has achtemp[0] = " << achtemp[1] << std::endl;
+    }
+    else
+      MPI_Reduce(&achtemp, &achtemp, nend-nstart, MPI_CXX_DOUBLE_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD);
+
     //Time Taken
     gettimeofday(&endTimer, NULL);
     double elapsedTimer = (endTimer.tv_sec - startTimer.tv_sec) +1e-6*(endTimer.tv_usec - startTimer.tv_usec);
