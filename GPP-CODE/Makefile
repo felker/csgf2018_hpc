@@ -1,7 +1,7 @@
 #VER=SEQ
 #VER=OpenMP
-VER=MPIOpenMP
-#VER=OpenACC
+#VER=MPIOpenMP
+VER=OpenACC
 #VER=ComplexClass
 
 #Sequential version
@@ -36,12 +36,8 @@ endif
 
 CXX = CC
 LINK = ${CXX}
-CXXFLAGS=-fopenmp -ffast-math -march=native -O3 -g #-hlist=a
+CXXFLAGS=  -O3
 LINKFLAGS=${CXXFLAGS}
-
-ifeq ($(VER), OpenACC)
-    CXXFLAGS+=-h pragma=acc
-endif
 
 OBJ = $(SRC:.cpp=.o)
 
