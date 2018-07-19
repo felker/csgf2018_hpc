@@ -9,9 +9,6 @@
 
 using namespace std;
 
-#pragma acc declare reduction \
-(+:GPPComplex:omp_out=omp_out+ompin)
-
 #define nstart 0
 #define nend 3
 
@@ -136,8 +133,9 @@ inline void noflagOCC_solver(double wxt, GPPComplex *wtilde_array, int my_igp, i
     double limittwo = 0.5*0.5;
     GPPComplex mygpvar1 = GPPComplex_conj(aqsmtemp[n1*ncouls+igp]);
     GPPComplex scht_loc(0.00, 0.00);
-#pragma acc parallel for reduction (+:scht_loc) schedule(static) default(none) shared(wxt, wtilde_array, my_igp, n1, aqsmtemp, aqsntemp, I_eps_array, ncouls, mygpvar1)
-    
+    double scht_loc_r = 0.0;
+    double scht_loc_i = 0.0;
+#pragma acc parallel loop reduction (+:scht_loc_r,scht_loc_i) 
     for(int ig = 0; ig<ncouls; ++ig)
     {
         GPPComplex wdiff = doubleMinusGPPComplex(wxt , wtilde_array[my_igp*ncouls+ig]);
@@ -147,10 +145,13 @@ inline void noflagOCC_solver(double wxt, GPPComplex *wtilde_array, int my_igp, i
         GPPComplex delw = GPPComplex_mult(GPPComplex_product(wtilde_array[my_igp*ncouls+ig] , GPPComplex_conj(wdiff)) ,rden); 
         double delwr = GPPComplex_real(GPPComplex_product(delw , GPPComplex_conj(delw)));
 
-        scht_loc += GPPComplex_product(GPPComplex_product(mygpvar1 , aqsntemp[n1*ncouls+ig]) , GPPComplex_product(delw , I_eps_array[my_igp*ncouls+ig])) ;
+        GPPComplex tmp = GPPComplex_product(GPPComplex_product(mygpvar1 , aqsntemp[n1*ncouls+ig]) , GPPComplex_product(delw , I_eps_array[my_igp*ncouls+ig])) ;
+        scht_loc_r += tmp.get_real();
+        scht_loc_i += tmp.get_imag();
     }
 
-    scht = scht_loc;
+    scht.set_real(scht_loc_r);
+    scht.set_imag(scht_loc_i);
 }
 
 //This function calculates the first nvband iterations of the outermost loop

@@ -34,11 +34,14 @@ ifeq ($(VER), ComplexClass)
     SRC = gppComplex.cpp
 endif
 
-CXX = CC
+CXX = pgc++
 LINK = ${CXX}
 CXXFLAGS=  -O3
 LINKFLAGS=${CXXFLAGS}
-
+ifeq ($(VER), OpenACC)
+    CXXFLAGS+=-ta=nvidia,cc35,ptxinfo,cuda9.0,pinned -Minfo=accel
+    LINKFLAGS+=-ta=nvidia,cc35,ptxinfo,cuda9.0,pinned -Minfo=accel
+endif
 OBJ = $(SRC:.cpp=.o)
 
 $(EXE): $(OBJ)
